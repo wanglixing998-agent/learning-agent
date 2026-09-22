@@ -29,6 +29,20 @@ TOOLS = [
         },
     },
     {
+            "type": "function",
+            "function": {
+                "name": "get_time",
+                "description": "查询指定城市的当前时间",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string", "description": "城市名，如：北京"}
+                    },
+                    "required": ["city"],
+                },
+            },
+        },
+    {
         "type": "function",
         "function": {
             "name": "add",
@@ -49,7 +63,9 @@ TOOLS = [
 def get_weather(city):
     weather_map = {"北京": "晴，26°C", "上海": "多云，28°C", "广州": "小雨，30°C", "深圳": "雷阵雨，29°C"}
     return weather_map.get(city, f"{city}：天气数据暂缺")
-
+def get_time(city):
+    time_map = {"北京": "14:30", "上海": "14:30", "广州": "14:30"}
+    return time_map.get(city, f"{city}：时间数据暂缺")
 def add(a, b):
     return a + b
 
@@ -57,6 +73,8 @@ def execute_tool(name, args):
     """根据工具名分发到真实函数"""
     if name == "get_weather":
         return get_weather(**args)
+    if name == "get_time":
+        return get_time(**args)
     if name == "add":
         return add(**args)
     return f"未知工具：{name}"
@@ -101,4 +119,4 @@ def run_agent(question, max_steps=6):
 
 # ===== 4. 跑一个需要"多步推理"的任务 =====
 if __name__ == "__main__":
-    run_agent("帮我查一下北京、广州和深圳今天的天气，然后告诉我哪个城市最适合户外跑步，并顺便计算这三个城市温度加起来的总和。")
+   run_agent("帮我查一下北京现在几点了，顺便告诉我北京今天的天气怎么样？")
