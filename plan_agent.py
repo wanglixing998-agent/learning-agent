@@ -67,6 +67,8 @@ CITY_COORDS = {
     "上海": (31.2304, 121.4737),
     "广州": (23.1291, 113.2644),
     "深圳": (22.5431, 114.0579),
+    "成都": (30.5728, 104.0668),
+
 }
 
 # WMO 国际天气代码 → 中文
@@ -100,8 +102,17 @@ def get_weather(city):
         return f"{city}：天气查询失败（{e}）"
 
 def get_time(city):
-    time_map = {"北京": "14:30", "上海": "14:30", "广州": "14:30"}
-    return time_map.get(city, f"{city}：时间数据暂缺")
+    """真实时间：调用 timeapi.io 获取北京时间（中国统一时区 Asia/Shanghai）"""
+    try:
+        resp = requests.get(
+            "https://timeapi.io/api/time/current/zone",
+            params={"timeZone": "Asia/Shanghai"},
+            timeout=15,
+        )
+        data = resp.json()
+        return f"{city}：{data['dateTime'][:16]}（北京时间）"
+    except Exception as e:
+        return f"{city}：时间查询失败（{e}）"
 
 def add(a, b):
     return a + b
@@ -187,7 +198,5 @@ class PlanExecuteAgent:
 # ===== 4. 演示：一个需要多步骤的复杂任务 =====
 if __name__ == "__main__":
     agent = PlanExecuteAgent()
-    agent.run(
-            "帮我比较北京、上海、广州三个城市今天的天气，推荐一个最适合旅游的城市，"
-            "并计算这三个城市温度的平均值（用加法工具分步计算）。"
-        )
+    agent.run("帮我查一下成都今天的天气，再查一下北京的天气对比，推荐一个更适合旅游的城市。")
+
