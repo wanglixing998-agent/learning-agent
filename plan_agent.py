@@ -2,6 +2,7 @@
 # 学习计划 Day 3 —— 多步任务规划
 import json
 import os
+import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -60,9 +61,43 @@ TOOLS = [
 ]
 
 # ===== 2. 工具执行 =====
+# ---- 真实天气 API（Open-Meteo，免费无需 key）----
+CITY_COORDS = {
+    "北京": (39.9042, 116.4074),
+    "上海": (31.2304, 121.4737),
+    "广州": (23.1291, 113.2644),
+    "深圳": (22.5431, 114.0579),
+}
+
+# WMO 国际天气代码 → 中文
+WEATHER_CODE = {
+    0: "晴", 1: "晴间多云", 2: "多云", 3: "阴",
+    45: "雾", 48: "雾凇",
+    51: "毛毛雨", 53: "毛毛雨", 55: "毛毛雨",
+    61: "小雨", 63: "中雨", 65: "大雨",
+    71: "小雪", 73: "中雪", 75: "大雪",
+    80: "阵雨", 81: "阵雨", 82: "强阵雨",
+    95: "雷暴", 96: "雷暴伴冰雹", 99: "雷暴伴冰雹",
+}
+
 def get_weather(city):
-    weather_map = {"北京": "晴，26°C", "上海": "多云，28°C", "广州": "小雨，30°C", "深圳": "雷阵雨，29°C"}
-    return weather_map.get(city, f"{city}：天气数据暂缺")
+    """真实天气：调用 Open-Meteo API 获取城市实时天气"""
+    if city not in CITY_COORDS:
+        return f"{city}：暂不支持该城市"
+    lat, lon = CITY_COORDS[city]
+    try:
+        resp = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={"latitude": lat, "longitude": lon, "current_weather": "true"},
+            timeout=15,
+        )
+        current = resp.json()["current_weather"]
+        temp = current["temperature"]
+        desc = WEATHER_CODE.get(current["weathercode"], f"代码{current['weathercode']}")
+        wind = current["windspeed"]
+        return f"{city}：{desc}，{temp}°C，风速{wind}km/h"
+    except Exception as e:
+        return f"{city}：天气查询失败（{e}）"
 
 def get_time(city):
     time_map = {"北京": "14:30", "上海": "14:30", "广州": "14:30"}
@@ -153,6 +188,6 @@ class PlanExecuteAgent:
 if __name__ == "__main__":
     agent = PlanExecuteAgent()
     agent.run(
-        "帮我比较北京、上海、广州三个城市今天的天气，推荐一个最适合旅游的城市，"
-        "并计算这三个城市温度的平均值（用加法工具分步计算）。"
-    )
+            "帮我比较北京、上海、广州三个城市今天的天气，推荐一个最适合旅游的城市，"
+            "并计算这三个城市温度的平均值（用加法工具分步计算）。"
+        )
