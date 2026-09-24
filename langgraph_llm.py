@@ -58,20 +58,30 @@ def check_weather(state: State) -> dict:
     return {"weather_text": weather_text}
 
 # ===== 4. 智能节点1：LLM Router（让大模型决定走哪条边）=====
+def parse_decision(decision: str) -> str:
+    """把 LLM 的原始输出解析成目标节点名。
+    纯函数：不依赖 LLM、不依赖网络，只做字符串判断 → 可以单元测试"""
+    d = decision.strip().lower()
+    if "storm" in d:
+        return "storm_plan"    # 雷暴 → 雷暴分支
+    if "outdoor" in d:
+        return "outdoor_plan"  # 晴天 → 户外分支
+    return "indoor_plan"       # 其余 → 室内分支
+
 def llm_router(state: State) -> str:
     """条件边：把天气交给大模型，让它判断适合哪种出行"""
     prompt = (
         f"当前天气：{state['weather_text']}。\n"
         "请判断这种天气更适合哪种出行方式。只回答一个词：\n"
+        "- 如果适合回家（如雷暴，雷雨），回答 storm\n"
         "- 如果适合户外活动（如晴天、多云），回答 outdoor\n"
         "- 如果适合室内活动（如下雨、雷暴、恶劣天气），回答 indoor\n"
         "不要输出其他内容。"
     )
     decision = llm.invoke(prompt).content.strip().lower()
     print(f"    [智能节点] LLM 判断天气 → {decision}")
-    if "outdoor" in decision:
-        return "outdoor_plan"
-    return "indoor_plan"
+    # LLM 只负责"说"（outdoor/indoor/storm），具体走向由纯函数决定
+    return parse_decision(decision)
 
 # ===== 5. 确定性节点：两个分支方案 =====
 def outdoor_plan(state: State) -> dict:
@@ -81,6 +91,10 @@ def outdoor_plan(state: State) -> dict:
 def indoor_plan(state: State) -> dict:
     print(f"    [分支] 室内方案")
     return {"plan": f"天气：{state['weather_text']}。适合室内活动：博物馆、茶馆、商场。"}
+def storm_plan(state:State)->dict:
+    """分支C：雷暴走的节点"""
+    print(f"    [暴雨警告] 暴雨，回家！")
+    return {"plan": f"天气：{state['weather_text']}。推荐室内活动：回家"}
 
 # ===== 6. 智能节点2：LLM 生成最终建议 =====
 def llm_summary(state: State) -> dict:
@@ -100,6 +114,7 @@ builder = StateGraph(State)
 builder.add_node("check_weather", check_weather)
 builder.add_node("outdoor_plan", outdoor_plan)
 builder.add_node("indoor_plan", indoor_plan)
+builder.add_node("storm_plan",storm_plan)
 builder.add_node("llm_summary", llm_summary)
 
 builder.add_edge(START, "check_weather")
@@ -108,18 +123,19 @@ builder.add_edge(START, "check_weather")
 builder.add_conditional_edges(
     "check_weather",
     llm_router,
-    {"outdoor_plan": "outdoor_plan", "indoor_plan": "indoor_plan"},
+    {"outdoor_plan": "outdoor_plan", "indoor_plan": "indoor_plan","storm_plan":"storm_plan"},
 )
 
 builder.add_edge("outdoor_plan", "llm_summary")
 builder.add_edge("indoor_plan", "llm_summary")
+builder.add_edge("storm_plan","llm_summary")
 builder.add_edge("llm_summary", END)
 
 app = builder.compile()
 
 # ===== 8. 运行 =====
 if __name__ == "__main__":
-    for city in ["广州", "成都"]:
+    for city in ["北京", "成都"]:
         print(f"\n🎯 输入城市：{city}")
         result = app.invoke({"city": city})
         print(f"✅ 最终建议：{result['plan']}")
