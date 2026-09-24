@@ -3,7 +3,7 @@
 import requests
 
 # 1. 发起 GET 请求（向服务器"要"数据）
-url = "https://jsonplaceholder.typicode.com/todos/1"
+url = "https://jsonplaceholder.typicode.com/posts/1"
 response = requests.get(url, timeout=10)
 
 # 2. 查看状态码：200 表示成功
@@ -15,4 +15,4 @@ data = response.json()
 # 4. 按字段打印
 print("ID:", data["id"])
 print("标题:", data["title"])
-print("是否完成:", data["completed"])
+print("正文:", data["body"])

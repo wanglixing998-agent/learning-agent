@@ -168,7 +168,7 @@ app = builder.compile()
 
 # ===== 9. 运行 =====
 if __name__ == "__main__":
-    result = app.invoke({"city": "成都", "days": 3})
+    result = app.invoke({"city": "广州", "days": 2})
     print("\n" + "=" * 40)
-    print("📋 成都 3 日游行程：")
+    print("📋 广州 2 日游行程：")
     print(result["itinerary"])

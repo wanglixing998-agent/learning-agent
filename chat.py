@@ -17,7 +17,7 @@ client = OpenAI(
 response = client.chat.completions.create(
     model="deepseek-flash",
     messages=[
-    
+
         {"role": "system", "content": "你是一个乐于助人的中文助手。"},
         {"role": "user", "content": "什么是函数？"},
     ],

@@ -11,3 +11,7 @@ __pycache__/
 # 数据库文件（运行产生的数据，不提交）
 *.db
 *.sqlite
+
+# IDE 配置（个人环境，不提交）
+.idea/
+.vscode/
