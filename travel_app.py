@@ -51,6 +51,16 @@ def main():
         if cmd.lower() in ("quit", "q", "exit", "退出"):
             print("👋 再见！旅途愉快！")
             break
+     
+        
+         # ---- 2.5 历史查询（新增：你的练习）----
+        if cmd.lower() in ("history", "历史", "h"):
+            rows = get_history()          # ← 调用已写好的函数
+            print("🗂️ 历史记录：")
+            for r in rows:                # ← 遍历每行
+                 print(f"  - {r[3]} | {r[0]} {r[1]}日游 | 风格:{r[2]}")
+            continue                      # ← 查完继续循环
+        
 
         # ---- 3. 解析输入：拆成「城市 天数」两个词 ----
         parts = cmd.split()
@@ -75,7 +85,7 @@ def main():
         if not (1 <= days <= 7):
             print("❌ 天数要在 1-7 之间哦\n")
             continue
-
+       
         # ---- 6. 执行规划（网络/API 出错不崩溃，给友好提示）----
         try:
             plan_trip(city, days)
