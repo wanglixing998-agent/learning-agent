@@ -116,5 +116,6 @@ def history():
     return page(body)
 
 if __name__ == "__main__":
-    print("启动 Web 服务器：http://127.0.0.1:5000")
-    web.run(host="127.0.0.1", port=5000)
+    # 0.0.0.0 = 监听本机所有网络接口（同一局域网的设备都能访问）
+    print("启动 Web 服务器：http://127.0.0.1:5000（局域网设备用 http://本机IP:5000）")
+    web.run(host="0.0.0.0", port=5000)
